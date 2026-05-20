@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LF Distribution &mdash; Relocation Strategy</title>
+<!--
+  ============================================================================
+  BENCHMARK PROPERTIES  ·  MODULAR TENANT-REP PITCH DECK  ·  RELOCATION TEMPLATE
+  ============================================================================
+  HOW THIS FILE WORKS
+  - Every pitch section is a section.slide with a data-module attribute.
+  - Turn modules on/off in MODULE_CONFIG (near the top of the JS).
+  - BRANDING: four built-in theme presets. Set BRAND.theme to one of
+    "ivory" | "editorial" | "gallery" | "charcoal". You can also press the
+    "T" key while viewing the deck to cycle themes and compare live.
+  - The Target Geography map is data-driven: edit MAP_DATA to repoint it at a
+    different submarket / building set for a future pitch.
+  - Modules are grouped: UNIVERSAL (renewal or relocation), RELOCATION-SPINE
+    (this pitch type), and the MAP module.
+  ============================================================================
+-->
+<style>
+:root{
+  /* themeable tokens - defaults below are the "ivory" preset; the JS
+     theme system overrides these on load. Constants follow further down. */
+  --bone:#fdf9f0;        /* light-slide background */
+  --paper:#ffffff;       /* card / panel background on light slides */
+  --ink:#231f20;         /* primary text on light slides (the contrast color) */
+  --ink-2:#54504a;       /* secondary text on light slides */
+  --line:#e6e0d2;        /* hairline border on light slides */
+  --muted:#9b958b;       /* muted text */
+  --accent:#fcaf17;      /* Benchmark marigold */
+  --accent-deep:#9a6b08; /* readable marigold for small text on light */
+  --deepbg:#231f20;      /* dark-slide background (cover, dividers, chrome) */
+  --deepbg-2:#322d2a;    /* raised panel on dark surfaces */
+  --deeptext:#f6f1e7;    /* text on dark surfaces */
+  --deepline:rgba(255,255,255,.12);
+  --ff-head:'Georgia','Times New Roman',serif;
+  /* constants - shared by every theme */
+  --good:#2f6f4f;
+  --good-deep:#27583f;
+  --warn:#b5852f;
+  --warn-deep:#946a22;
+  --maxw:1180px;
+  --ff-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:var(--ff-body);
+  color:var(--ink);
+  background:var(--deepbg);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.55;
+}
+h1,h2,h3,h4{font-family:var(--ff-head);font-weight:400;line-height:1.15;}
+
+/* ---------- scroll deck ---------- */
+#deck{
+  height:100vh;
+  overflow-y:scroll;
+  scroll-snap-type:y proximity;
+  scroll-behavior:smooth;
+}
+.slide{
+  min-height:100vh;
+  scroll-snap-align:start;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:90px 56px 80px;
+  position:relative;
+}
+.slide.light{background:var(--bone);color:var(--ink);}
+.slide.paper{background:var(--paper);color:var(--ink);}
+.slide.dark{background:var(--deepbg);color:var(--deeptext);}
+.slide.deep{background:linear-gradient(160deg,var(--deepbg-2) 0%,var(--deepbg) 100%);color:var(--deeptext);}
+.inner{width:100%;max-width:var(--maxw);margin:0 auto;}
+
+/* ---------- shared type ---------- */
+.kicker{
+  font-family:var(--ff-body);
+  font-size:12px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--accent);font-weight:600;margin-bottom:18px;
+  display:flex;align-items:center;gap:12px;
+}
+.kicker::before{content:"";width:34px;height:1px;background:var(--accent);display:inline-block;}
+h2.title{font-size:clamp(30px,4vw,52px);margin-bottom:10px;letter-spacing:-.01em;}
+.lead{font-size:clamp(15px,1.4vw,19px);color:var(--ink-2);max-width:740px;margin-bottom:34px;}
+.slide.dark .lead,.slide.deep .lead{color:#c9ccd4;}
+.slide-num{
+  position:absolute;top:34px;right:56px;font-family:var(--ff-head);
+  font-size:13px;color:var(--muted);letter-spacing:.05em;
+}
+
+/* ---------- reveal animation ---------- */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s);}
+.reveal.in{opacity:1;transform:none;}
+
+/* ---------- top progress + nav ---------- */
+#progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:60;transition:width .15s linear;}
+#topbar{
+  position:fixed;top:0;left:0;right:0;height:54px;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 26px;background:var(--deepbg);
+  border-bottom:1px solid var(--deepline);
+}
+#brandmark{display:flex;align-items:center;gap:13px;}
+.bm-logo{display:block;width:auto;}
+.bm-topbar{height:20px;}
+#brandmark .bt{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  padding-left:13px;border-left:1px solid var(--deepline);}
+#menubtn{
+  background:none;border:1px solid var(--deepline);color:var(--deeptext);
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  padding:8px 16px;cursor:pointer;font-family:var(--ff-body);transition:.2s;
+}
+#menubtn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ---------- contents overlay ---------- */
+#overlay{
+  position:fixed;inset:0;z-index:70;background:var(--deepbg);
+  display:none;flex-direction:column;padding:80px 56px;overflow-y:auto;
+}
+#overlay.open{display:flex;}
+#overlay h3{color:var(--accent);font-size:13px;letter-spacing:.24em;text-transform:uppercase;font-family:var(--ff-body);margin-bottom:30px;}
+#overlay ol{list-style:none;max-width:760px;}
+#overlay li{
+  display:flex;gap:20px;align-items:baseline;padding:14px 0;
+  border-bottom:1px solid var(--deepline);cursor:pointer;color:#cfd2da;transition:.2s;
+}
+#overlay li:hover{color:var(--accent);padding-left:8px;}
+#overlay li .n{font-family:var(--ff-head);color:var(--muted);font-size:14px;width:30px;}
+#overlay li .t{font-family:var(--ff-head);font-size:22px;}
+#overlay li .grp{margin-left:auto;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+#closeov{position:absolute;top:26px;right:40px;background:none;border:none;color:var(--deeptext);font-size:30px;cursor:pointer;line-height:1;}
+
+/* ---------- side dot rail ---------- */
+#rail{position:fixed;right:22px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:11px;}
+#rail button{
+  width:9px;height:9px;border-radius:50%;border:1px solid rgba(140,140,140,.6);
+  background:transparent;cursor:pointer;padding:0;transition:.25s;
+}
+#rail button.active{background:var(--accent);border-color:var(--accent);transform:scale(1.35);}
+#rail button:hover{border-color:var(--accent);}
+
+/* ---------- prev/next ---------- */
+#pager{position:fixed;bottom:22px;right:26px;z-index:50;display:flex;gap:8px;}
+#pager button{
+  width:42px;height:42px;border:1px solid var(--deepline);background:var(--deepbg);
+  color:var(--deeptext);cursor:pointer;font-size:16px;transition:.2s;
+}
+#pager button:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ---------- theme toast ---------- */
+#themeToast{
+  position:fixed;left:26px;bottom:24px;z-index:80;
+  background:var(--deepbg-2);color:var(--deeptext);border:1px solid var(--deepline);
+  padding:9px 16px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;pointer-events:none;
+}
+#themeToast.show{opacity:1;transform:none;}
+#themeToast b{color:var(--accent);font-weight:600;}
+
+/* ---------- COVER ---------- */
+#m-cover{padding:0;}
+#m-cover .cover-wrap{
+  position:relative;width:100%;min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:120px 56px 90px;overflow:hidden;
+}
+#m-cover .ghost{
+  position:absolute;font-family:var(--ff-head);font-size:30vw;color:rgba(255,255,255,.025);
+  right:-3vw;bottom:-9vw;line-height:.8;pointer-events:none;user-select:none;
+}
+#m-cover .bm-cover{height:34px;margin-bottom:30px;}
+#m-cover .cv-kicker{color:var(--accent);letter-spacing:.3em;font-size:13px;text-transform:uppercase;margin-bottom:22px;}
+#m-cover h1{font-size:clamp(44px,7vw,104px);color:var(--deeptext);letter-spacing:-.02em;}
+#m-cover h1 em{font-style:normal;color:var(--accent);font-size:.75em;}
+#m-cover .sub{font-size:clamp(16px,1.7vw,23px);color:#aeb2bc;margin-top:20px;max-width:620px;}
+#m-cover .cv-meta{margin-top:50px;display:flex;gap:46px;flex-wrap:wrap;}
+#m-cover .cv-meta div{border-left:2px solid var(--accent);padding-left:16px;}
+#m-cover .cv-meta .l{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+#m-cover .cv-meta .v{font-family:var(--ff-head);font-size:18px;color:var(--deeptext);}
+#m-cover .scrollcue{position:absolute;bottom:30px;left:56px;color:var(--muted);font-size:11px;letter-spacing:.2em;text-transform:uppercase;animation:bob 2s infinite;}
+@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
+
+/* ---------- generic components ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.card{background:var(--paper);border:1px solid var(--line);padding:28px;}
+.slide.paper .card{background:var(--bone);}
+.card h4{font-size:20px;margin-bottom:10px;}
+.card p{font-size:14px;color:var(--ink-2);}
+.card .ico{
+  width:42px;height:42px;border-radius:50%;background:var(--accent);color:#231f20;
+  display:flex;align-items:center;justify-content:center;font-family:var(--ff-head);
+  font-size:18px;margin-bottom:16px;
+}
+.statbig{font-family:var(--ff-head);font-size:clamp(40px,5vw,68px);color:var(--accent);line-height:1;}
+.statlbl{font-size:13px;color:var(--ink-2);margin-top:8px;}
+.slide.dark .statlbl,.slide.deep .statlbl{color:#c9ccd4;}
+ul.ticks{list-style:none;}
+ul.ticks li{position:relative;padding-left:26px;margin-bottom:13px;font-size:15px;color:var(--ink-2);}
+.slide.dark ul.ticks li,.slide.deep ul.ticks li{color:#cdd0d8;}
+ul.ticks li::before{content:"";position:absolute;left:0;top:9px;width:9px;height:9px;border:1.5px solid var(--accent);}
+.tag{display:inline-block;font-size:10px;letter-spacing:.13em;text-transform:uppercase;padding:4px 9px;border:1px solid var(--accent);color:var(--accent-deep);margin:2px 4px 2px 0;}
+.callout{background:var(--deepbg);color:var(--deeptext);padding:22px 26px;border-left:3px solid var(--accent);}
+.callout .ct{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:7px;}
+.callout p{font-size:15px;color:#d6d8de;}
+
+/* steps */
+.steprow{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+.step{border-top:2px solid var(--deepline);padding-top:16px;}
+.step .sn{font-family:var(--ff-head);font-size:34px;color:var(--accent);line-height:1;}
+.step h4{font-size:15px;margin:10px 0 7px;color:var(--deeptext);}
+.step p{font-size:12.5px;color:#c9ccd4;}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px;}
+.tbl th{
+  text-align:left;font-family:var(--ff-body);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:2px solid var(--line);
+}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top;}
+.tbl tr:hover td{background:rgba(252,175,23,.07);}
+.tbl .b{color:var(--ink);font-family:var(--ff-head);font-size:15px;}
+
+/* timeline */
+.timeline{position:relative;margin-top:20px;padding-left:6px;}
+.timeline::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line);}
+.tl-item{position:relative;padding-left:38px;margin-bottom:26px;}
+.tl-item::before{content:"";position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:var(--paper);border:3px solid var(--accent);}
+.tl-item .when{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-deep);font-weight:600;}
+.tl-item h4{font-size:18px;margin:3px 0 5px;}
+.tl-item p{font-size:13.5px;color:var(--ink-2);}
+.slide.deep .timeline::before{background:var(--deepline);}
+.slide.deep .tl-item::before{background:var(--deepbg);}
+.slide.deep .tl-item .when{color:var(--accent);}
+.slide.deep .tl-item h4{color:var(--deeptext);}
+.slide.deep .tl-item p{color:#c9ccd4;}
+
+/* placeholder marker */
+.ph{
+  background:repeating-linear-gradient(45deg,rgba(252,175,23,.12),rgba(252,175,23,.12) 7px,transparent 7px,transparent 14px);
+  border:1px dashed var(--accent);color:var(--accent-deep);
+  padding:1px 7px;font-size:.92em;border-radius:2px;white-space:nowrap;
+}
+
+/* ---------- MAP MODULE (refined flat 2D, callout cards) ---------- */
+.mapwrap{position:relative;display:grid;grid-template-columns:208px 1fr 208px;align-items:stretch;}
+.leader-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;}
+.cardcol{display:flex;flex-direction:column;gap:7px;padding:6px 0;z-index:2;}
+.cardcol.left{padding-right:20px;align-items:flex-end;}
+.cardcol.right{padding-left:20px;align-items:flex-start;}
+.mcard{width:100%;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--muted);padding:7px 10px;cursor:pointer;transition:border-color .16s,box-shadow .16s;}
+.mcard:hover,.mcard.sel{border-color:var(--accent);box-shadow:0 2px 9px rgba(0,0,0,.14);}
+.mcard.now{border-left-color:var(--good);}
+.mcard.soon{border-left-color:#7d8590;}
+.mcard .mc-name{font-family:var(--ff-head);font-size:12.5px;color:var(--ink);line-height:1.2;}
+.mcard .mc-fact{font-size:10.5px;color:var(--ink-2);margin-top:2px;line-height:1.35;}
+.mcard.dim{opacity:.3;}
+.mapface{position:relative;background:#e3e9ee;border:1px solid var(--line);overflow:hidden;min-height:560px;}
+.grid-svg{position:absolute;inset:0;width:100%;height:100%;}
+.mdot{position:absolute;width:13px;height:13px;border-radius:50%;border:2px solid #fff;transform:translate(-50%,-50%);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:transform .16s;z-index:3;}
+.mdot.now{background:var(--good);}
+.mdot.soon{background:#7d8590;}
+.mdot:hover,.mdot.sel{transform:translate(-50%,-50%) scale(1.55);}
+.mdot.dim{opacity:.18;}
+.m-street{position:absolute;left:7px;font-size:9px;color:#566472;letter-spacing:.05em;font-weight:600;transform:translateY(-100%);padding-bottom:2px;pointer-events:none;white-space:nowrap;z-index:2;}
+.m-ave{position:absolute;bottom:3px;font-size:8.5px;color:#6c7a88;letter-spacing:.05em;transform:translateX(-50%);pointer-events:none;white-space:nowrap;z-index:2;}
+.m-bway{position:absolute;font-size:9px;color:#fff;font-style:italic;font-family:var(--ff-head);letter-spacing:.12em;transform:translate(-50%,-50%) rotate(-67deg);text-shadow:0 1px 2px rgba(0,0,0,.45);pointer-events:none;z-index:2;}
+.m-transit{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px;pointer-events:none;z-index:2;}
+.m-transit .tdot{width:15px;height:15px;border-radius:50%;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;}
+.m-transit .tlabel{font-size:8px;letter-spacing:.06em;color:#36424e;background:rgba(255,255,255,.82);padding:1px 4px;font-weight:600;white-space:nowrap;}
+.mapbottom{display:grid;grid-template-columns:1fr 330px;gap:24px;margin-top:24px;align-items:start;}
+.legendrow{display:flex;gap:24px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+.legendrow .li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);}
+.legendrow .sw{width:13px;height:13px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.filterbtn{background:var(--deepbg);color:var(--deeptext);border:none;padding:11px 16px;cursor:pointer;font-family:var(--ff-body);font-size:12px;letter-spacing:.04em;display:inline-flex;justify-content:space-between;align-items:center;gap:20px;transition:.2s;}
+.filterbtn:hover{background:var(--deepbg-2);}
+.filterbtn .state{color:var(--accent);font-size:11px;letter-spacing:.14em;text-transform:uppercase;}
+.detail{background:var(--paper);border:1px solid var(--line);padding:20px;min-height:210px;}
+.detail .dempty{color:var(--muted);font-size:13px;font-style:italic;}
+.detail .dstatus{font-size:10px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;}
+.detail h4{font-size:21px;margin:5px 0 2px;color:var(--ink);}
+.detail .daddr{font-size:12px;color:var(--muted);margin-bottom:14px;}
+.detail .drow{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);gap:14px;}
+.detail .drow span:first-child{color:var(--muted);flex:none;}
+.detail .drow span:last-child{color:var(--ink);text-align:right;font-weight:600;}
+.detail .dnote{font-size:12.5px;color:var(--ink-2);margin-top:12px;line-height:1.5;}
+.map-foot{font-size:11px;color:var(--muted);margin-top:14px;}
+
+/* ---------- responsive ---------- */
+@media(max-width:900px){
+  .slide{padding:80px 26px 60px;}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr;gap:22px;}
+  .steprow{grid-template-columns:1fr 1fr;}
+  #rail{display:none;}
+  .slide-num{right:26px;}
+  #m-cover .cover-wrap{padding:110px 26px 80px;}
+  #m-cover .scrollcue{left:26px;}
+  .mapwrap{grid-template-columns:1fr;}
+  .cardcol,.leader-svg{display:none;}
+  .mapface{min-height:420px;}
+  .mapbottom{grid-template-columns:1fr;}
+}
+
+/* clients roster: pure-CSS show-more toggle */
+.clients-cb{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+.more-row{display:none;}
+.clients-cb:checked ~ table .more-row{display:table-row;}
+.clients-toggle{display:inline-flex;align-items:center;gap:8px;margin-top:16px;cursor:pointer;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-deep);border:1px solid var(--line);padding:10px 18px;transition:border-color .2s,color .2s;user-select:none;}
+.clients-toggle:hover{border-color:var(--accent);}
+.clients-toggle .t-less{display:none;}
+.clients-cb:checked ~ .clients-toggle .t-more{display:none;}
+.clients-cb:checked ~ .clients-toggle .t-less{display:inline;}
+
+/* slide 3 (Our Approach) - text +25% */
+#m-approach .kicker{font-size:15px;}
+#m-approach h2.title{font-size:clamp(38px,5vw,65px);}
+#m-approach .lead{font-size:clamp(19px,1.75vw,24px);}
+#m-approach .callout .ct{font-size:14px;}
+#m-approach .callout p{font-size:19px;}
+#m-approach ul.ticks li{font-size:19px;}
+/* slide 6 (The Process) - text +40% */
+#m-process .kicker{font-size:17px;}
+#m-process h2.title{font-size:clamp(42px,5.6vw,73px);}
+#m-process .lead{font-size:clamp(21px,2vw,27px);}
+#m-process .step .sn{font-size:48px;}
+#m-process .step h4{font-size:21px;}
+#m-process .step p{font-size:17.5px;}
+/* slide 7 (Status Quo) - text +25% */
+#m-statusquo .kicker{font-size:15px;}
+#m-statusquo h2.title{font-size:clamp(38px,5vw,65px);}
+#m-statusquo .lead{font-size:clamp(19px,1.75vw,24px);}
+#m-statusquo .callout .ct{font-size:14px;}
+#m-statusquo .callout p{font-size:19px;}
+#m-statusquo .tbl th{font-size:14px;}
+#m-statusquo .tbl td{font-size:17px;}
+#m-statusquo .tbl .b{font-size:19px;}
+#m-statusquo .map-foot{font-size:14px;}
+/* team / bios slide */
+.bio{display:flex;gap:20px;align-items:flex-start;}
+.bio-photo{width:110px;height:110px;border-radius:50%;background:#b5b3ae;color:#231f20;display:flex;align-items:center;justify-content:center;font-family:var(--ff-head);font-size:38px;flex:none;overflow:hidden;position:relative;}
+.bio-photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:block;}
+.bio h4{font-size:21px;margin-bottom:2px;}
+.bio-title{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:10px;}
+.bio p{font-size:14px;color:var(--ink-2);}
+/* slide 13 light cards on the dark slide */
+.slide.deep .lightcard{background:var(--bone);border:1px solid var(--line);}
+.slide.deep .lightcard h4{color:var(--ink);}
+.slide.deep .lightcard ul.ticks li{color:var(--ink-2);}
+
+/* What Sets Us Apart - clickable case cards + popout modal */
+.case-card{cursor:pointer;display:flex;flex-direction:column;min-height:260px;transition:border-color .2s,box-shadow .2s,transform .2s;}
+.case-card:hover{border-color:var(--accent);box-shadow:0 8px 22px rgba(0,0,0,.10);transform:translateY(-2px);}
+.case-card .case-metric{font-family:var(--ff-head);color:var(--accent);line-height:1;margin-top:22px;display:flex;align-items:baseline;gap:8px;}
+.case-card .case-num{font-size:clamp(54px,6vw,80px);}
+.case-card .case-unit{font-size:22px;color:var(--accent-deep);}
+.case-card .case-label{font-size:14px;color:var(--ink-2);margin-top:10px;letter-spacing:.02em;line-height:1.4;}
+.case-card .case-cue{margin-top:auto;padding-top:24px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-deep);font-weight:600;}
+.case-card .case-narrative{display:none;}
+.case-modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;}
+.case-modal[hidden]{display:none;}
+.case-modal-backdrop{position:absolute;inset:0;background:rgba(15,16,20,.7);}
+.case-modal-body{position:relative;z-index:1;background:var(--paper);max-width:680px;width:90vw;max-height:80vh;overflow-y:auto;padding:48px 48px 44px;border-top:4px solid var(--accent);box-shadow:0 30px 80px rgba(0,0,0,.45);}
+.case-modal-close{position:absolute;top:14px;right:18px;background:none;border:none;font-size:28px;color:var(--muted);cursor:pointer;line-height:1;}
+.case-modal-close:hover{color:var(--ink);}
+.case-modal-body h3{font-family:var(--ff-head);font-size:26px;margin:6px 0 16px;color:var(--ink);}
+.case-modal-body p{font-size:15px;color:var(--ink-2);line-height:1.7;margin-bottom:12px;}
+.case-modal-body .tag{margin-bottom:8px;}
+.case-modal-body .case-hero{display:flex;align-items:baseline;gap:10px;margin:4px 0 22px;}
+.case-modal-body .case-hero .case-num{font-family:var(--ff-head);font-size:48px;color:var(--accent);line-height:1;}
+.case-modal-body .case-hero .case-unit{font-size:18px;color:var(--accent-deep);}
+.case-modal-body .case-hero .case-hero-label{font-size:13px;color:var(--ink-2);letter-spacing:.02em;margin-left:8px;}
+
+/* visible case card - deal info on second row */
+.case-card .case-deal{font-family:var(--ff-head);font-size:15px;color:var(--ink);margin-top:8px;line-height:1.3;}
+/* modal photo gallery */
+.case-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 22px;}
+.case-photo{margin:0;}
+.case-photo .photo-slot{aspect-ratio:4/3;background:var(--bone);border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);text-align:center;padding:10px;letter-spacing:.02em;font-style:italic;}
+.case-photo img{display:block;width:100%;height:auto;}
+
+/* MAP: detail panel now lives in a right-side rail alongside the map face */
+.mapwrap{grid-template-columns:200px 1fr 290px;}
+.map-right-rail{display:flex;flex-direction:column;gap:14px;padding-left:20px;z-index:2;min-height:0;}
+.map-right-rail .cardcol.right{padding-left:0;}
+.map-right-rail .detail{flex:1;overflow-y:auto;min-height:210px;}
+.mapbottom{display:block;margin-top:18px;}
+.map-controls{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:8px;}
+@media(max-width:900px){.mapwrap{grid-template-columns:1fr;} .map-right-rail{padding-left:0;}}
+
+/* COVER background variants - cycle with "B" key. Default = ivory. */
+#m-cover{--c-bg:#f5f1e8;--c-text:#231f20;--c-text-muted:#5a5550;--c-ghost:rgba(35,31,32,.07);--c-label:#7a7670;--c-kicker:var(--accent);}
+#m-cover.cover-bg-charcoal{--c-bg:#231f20;--c-text:#f5f1e8;--c-text-muted:#aeb2bc;--c-ghost:rgba(255,255,255,.025);--c-label:#9b958b;--c-kicker:var(--accent);}
+#m-cover.cover-bg-marigold{--c-bg:#fcaf17;--c-text:#231f20;--c-text-muted:#3d2f08;--c-ghost:rgba(35,31,32,.10);--c-label:#6b5419;--c-kicker:#231f20;}
+#m-cover.cover-bg-paper{--c-bg:#ffffff;--c-text:#1a1c1f;--c-text-muted:#5a5550;--c-ghost:rgba(35,31,32,.05);--c-label:#7a7670;--c-kicker:var(--accent);}
+#m-cover{background:var(--c-bg);}
+#m-cover h1{color:var(--c-text);}
+#m-cover h1 em{color:var(--accent);}
+#m-cover.cover-bg-marigold h1 em{color:#5a3d0a;}
+#m-cover .sub{color:var(--c-text-muted);}
+#m-cover .cv-meta .v{color:var(--c-text);}
+#m-cover .cv-meta .l{color:var(--c-label);}
+#m-cover .cv-meta div{border-left-color:var(--c-kicker);}
+#m-cover .ghost{color:var(--c-ghost);}
+#m-cover .cv-kicker{color:var(--c-kicker);}
+#m-cover .scrollcue{color:var(--c-text-muted);}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="topbar">
+  <div id="brandmark">
+    <img class="bm-logo bm-topbar" id="logoTopbar" alt="Benchmark Properties">
+  </div>
+  <button id="menubtn">Contents</button>
+</div>
+
+<div id="overlay">
+  <button id="closeov">&times;</button>
+  <h3>Presentation Contents</h3>
+  <ol id="ov-list"></ol>
+</div>
+
+<div id="rail"></div>
+<div id="pager">
+  <button id="prevb" title="Previous">&#8593;</button>
+  <button id="nextb" title="Next">&#8595;</button>
+</div>
+<div id="themeToast"></div>
+
+<div id="deck">
+
+<!-- MODULE: COVER  [universal] -->
+<section class="slide cover-bg-ivory" data-module="cover" data-title="Cover" data-group="" id="m-cover">
+  <div class="cover-wrap">
+    <div class="ghost">LF</div>
+    <div class="cv-kicker">Real Estate Strategy</div>
+    <h1>LF Distribution<br><em>Relocation Roadmap</em></h1>
+    <p class="sub">Identifying the right New York home for the next chapter of LF Distribution</p>
+    <div class="cv-meta">
+      <div><div class="l">Prepared for</div><div class="v">LF Distribution</div></div>
+      <div><div class="l">Prepared by</div><div class="v" data-brand="firm">Benchmark Properties</div></div>
+    </div>
+  </div>
+  <div class="scrollcue">Scroll to begin &#8595;</div>
+</section>
+
+<!-- MODULE: TABLE OF CONTENTS  [universal] -->
+<section class="slide light" data-module="toc" data-title="Contents" data-group="" id="m-toc">
+  <div class="inner">
+    <div class="kicker">What we'll cover</div>
+    <h2 class="title reveal">A clear path from today to a signed lease and beyond</h2>
+    <p class="lead reveal" style="--d:.05s">This roadmap has four sections &mdash; who we are, where LF Distribution stands today, where the market is, and how we'll plan and execute a successful project each step of the way.</p>
+    <div class="grid4">
+      <div class="card reveal" style="--d:.05s"><div class="ico">1</div><h4>Our Firm</h4><p>Approach, track record, representative clients, and the process we run on every assignment.</p></div>
+      <div class="card reveal" style="--d:.12s"><div class="ico">2</div><h4>The Assessment</h4><p>LF Distribution's current position and the parameters that shape the search.</p></div>
+      <div class="card reveal" style="--d:.19s"><div class="ico">3</div><h4>The Market</h4><p>Site selection criteria, the Fashion District availability map, and a building shortlist.</p></div>
+      <div class="card reveal" style="--d:.26s"><div class="ico">4</div><h4>Execution</h4><p>Programming, negotiation, vendor coordination, schedule, and next steps.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: FIRM APPROACH  [universal / credentials] -->
+<section class="slide paper" data-module="approach" data-title="Our Approach" data-group="Our Firm" id="m-approach">
+  <div class="inner">
+    <div class="kicker">Our Firm</div>
+    <div class="grid2">
+      <div>
+        <h2 class="title reveal">A unique approach to real estate transactions</h2>
+        <p class="lead reveal" style="--d:.05s">We take tremendous care to involve ourselves through every facet of our client's project. Every assignment is run as an integrated service, from our first cup of coffee all the way through move-in.</p>
+        <div class="callout reveal" style="--d:.1s">
+          <div class="ct">What this means for LF Distribution</div>
+          <p>One team accountable for the whole transaction &mdash; market strategy, negotiation, and vendor coordination &mdash; so nothing gets missed.</p>
+        </div>
+      </div>
+      <ul class="ticks">
+        <li class="reveal" style="--d:.05s"><strong>Integrated service</strong> &mdash; strategy, negotiation, execution and project coordination led by a highly experienced, dedicated team.</li>
+        <li class="reveal" style="--d:.1s"><strong>Reputation first</strong> &mdash; we are measured by our long-term relationships, first and foremost with our clients, and extending throughout the marketplace.</li>
+        <li class="reveal" style="--d:.2s"><strong>Detail-oriented</strong> &mdash; comprehensive thoroughness in every step of the process, including every document and line of spreadsheets.</li>
+        <li class="reveal" style="--d:.25s"><strong>Skilled negotiators</strong> &mdash; creative structuring to maximize value &amp; flexibility and minimize cost.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: TEAM / BIOS  [universal / credentials] -->
+<section class="slide light" data-module="team" data-title="The Team" data-group="Our Firm" id="m-team">
+  <div class="inner">
+    <div class="kicker">Our Firm</div>
+    <h2 class="title reveal">The team on this assignment</h2>
+    <p class="lead reveal" style="--d:.05s">LF Distribution's relocation is led personally by the principals who run every Benchmark assignment, from the first meeting through move-in.</p>
+    <div class="grid2">
+      <div class="card reveal bio" style="--d:.1s">
+        <div class="bio-photo"><img src="data:image/jpeg;base64,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" alt="Michael Beyda"></div>
+        <div>
+          <h4>Michael Beyda</h4>
+          <div class="bio-title">Principal</div>
+          <p>With 21 years of experience, Michael is an active member of New York's real estate community. Taking great pride and care in each relationship and project, Michael's primary area is as a Tenant Advisor. Most recently, Michael led a group in the purchase and re-development of 198 Madison, a portion of the former B. Altman Building.</p>
+        </div>
+      </div>
+      <div class="card reveal bio" style="--d:.18s">
+        <div class="bio-photo"><img src="data:image/jpeg;base64,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" alt="Joel Kubie"></div>
+        <div>
+          <h4>Joel Kubie</h4>
+          <div class="bio-title">Director</div>
+          <p>Joel brings 10 years of direct experience working on both the Agency and Tenant side of real estate leasing. Since joining Benchmark 2 years ago and teaming with Michael, they have worked on dozens of leasing assignments throughout New York City, concentrating on the Fashion District, Midtown, and Midtown South. Joel brings a hardworking, dedicated, relationship-based approach to his work. Recently, Joel was appointed to lead a leasing team at 1407 Broadway, a 1.1 million square foot office tower, and immediately began showing great results.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: EXPERIENCE & TRACK RECORD  [universal / credentials] -->
+<section class="slide light" data-module="experience" data-title="Track Record" data-group="Our Firm" id="m-experience">
+  <div class="inner">
+    <div class="kicker">Our Firm</div>
+    <h2 class="title reveal">Directly relevant experience for this assignment</h2>
+    <p class="lead reveal" style="--d:.05s">Thirty years of combined tenant representation, concentrated in the same buildings and submarket LF Distribution is considering.</p>
+    <div class="grid4">
+      <div class="reveal" style="--d:.05s"><div class="statbig" data-count="30" data-suffix="+">30+</div><div class="statlbl">Combined years in tenant representation</div></div>
+      <div class="reveal" style="--d:.12s"><div class="statbig" data-count="600" data-suffix="+">600+</div><div class="statlbl">Transactions completed</div></div>
+      <div class="reveal" style="--d:.19s"><div class="statbig">Office</div><div class="statlbl">Exclusive focus &mdash; no retail or industrial distraction</div></div>
+      <div class="reveal" style="--d:.26s"><div class="statbig">Apparel</div><div class="statlbl">Deep niche in the fashion &amp; apparel industry</div></div>
+    </div>
+    <div class="callout reveal" style="--d:.3s;margin-top:36px;">
+      <p>We have negotiated leases and maintain reputable relationships with every building in the district.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: SAMPLE CLIENT LIST  [universal / credentials] -->
+<section class="slide paper" data-module="clients" data-title="Clients" data-group="Our Firm" id="m-clients">
+  <div class="inner">
+    <div class="kicker">Our Firm</div>
+    <h2 class="title reveal">A representative client roster</h2>
+    <p class="lead reveal" style="--d:.05s">A selection of apparel, fashion, and consumer-brand tenants we have represented &mdash; many in the same Broadway and Seventh Avenue corridor LF Distribution is targeting.</p>
+    <input type="checkbox" id="clientsToggle" class="clients-cb">
+    <table class="tbl reveal" style="--d:.1s">
+      <thead><tr><th>Client</th><th>Buildings Represented In</th><th>Square Footage</th></tr></thead>
+      <tbody>
+        <tr><td class="b">Americo Group</td><td>1411 Broadway, 498 Seventh, 112 W 34</td><td>131,000</td></tr>
+        <tr><td class="b">Kids Headquarters</td><td>31 W 34, 3 W 35</td><td>125,000</td></tr>
+        <tr><td class="b">O5 Apparel</td><td>31 W 34</td><td>105,000</td></tr>
+        <tr><td class="b">Authentic Brands</td><td>100 W 33, 1411 Broadway</td><td>100,000</td></tr>
+        <tr><td class="b">Enchante</td><td>16 E 34</td><td>75,000</td></tr>
+        <tr><td class="b">ES Originals</td><td>440 Ninth, 450 W 33, 350 W 31, 1370 Avenue of the Americas</td><td>72,000</td></tr>
+        <tr><td class="b">Moret Group</td><td>1411 Broadway</td><td>65,000</td></tr>
+        <tr><td class="b">Bentex Group</td><td>34 West 33rd Street, 198 Madison</td><td>60,000</td></tr>
+        <tr><td class="b">High Life Apparel</td><td>31 W 34, 498 Seventh</td><td>60,000</td></tr>
+        <tr><td class="b">In Mocean Group</td><td>463 Seventh</td><td>60,000</td></tr>
+        <tr><td class="b">Dreamwear</td><td>183 Madison</td><td>51,000</td></tr>
+        <tr><td class="b">Adjmi Apparel Group</td><td>463 Seventh Avenue</td><td>48,000</td></tr>
+        <tr><td class="b">Mamiye Brothers</td><td>1385 Broadway, 1411 Broadway</td><td>44,000</td></tr>
+        <tr><td class="b">Town &amp; Country Linen</td><td>261 Fifth</td><td>38,000</td></tr>
+        <tr><td class="b">ES Sutton</td><td>1407 Broadway</td><td>30,000</td></tr>
+        <tr><td class="b">Ground Up International</td><td>1333 Broadway</td><td>30,000</td></tr>
+        <tr><td class="b">Childrens Apparel Network</td><td>31 W 34</td><td>30,000</td></tr>
+        <tr><td class="b">Core Home Group</td><td>42 W 39</td><td>30,000</td></tr>
+        <tr class="more-row"><td class="b">Wiesner Products</td><td>1333 Broadway, 34 W 33, 1359 Broadway</td><td>30,000</td></tr>
+        <tr class="more-row"><td class="b">C-Life Group</td><td>1385 Broadway</td><td>23,000</td></tr>
+        <tr class="more-row"><td class="b">ICER Brands</td><td>1385 Broadway</td><td>23,000</td></tr>
+        <tr class="more-row"><td class="b">Jacmel Jewelry</td><td>1385 Broadway</td><td>23,000</td></tr>
+        <tr class="more-row"><td class="b">Old Mission Capital</td><td>120 Broadway</td><td>20,000</td></tr>
+        <tr class="more-row"><td class="b">AD Sutton</td><td>10 W 33</td><td>20,000</td></tr>
+        <tr class="more-row"><td class="b">Star Ride Clothing / Cloud Nine</td><td>1407 Broadway</td><td>20,000</td></tr>
+        <tr class="more-row"><td class="b">Trimera Group / Gottex</td><td>1441 Broadway, 550 Seventh</td><td>12,000</td></tr>
+        <tr class="more-row"><td class="b">elf cosmetics</td><td>10 W 33</td><td>10,000</td></tr>
+        <tr class="more-row"><td class="b">Bealls</td><td>550 Seventh</td><td>6,000</td></tr>
+      </tbody>
+    </table>
+    <label for="clientsToggle" class="clients-toggle"><span class="t-more">See more &#8595;</span><span class="t-less">See less &#8593;</span></label>
+  </div>
+</section>
+
+<!-- MODULE: PROCESS OVERVIEW  [universal] -->
+<section class="slide deep" data-module="process" data-title="The Process" data-group="Our Firm" id="m-process">
+  <div class="inner">
+    <div class="kicker">How we work</div>
+    <h2 class="title reveal" style="color:var(--deeptext)">Six steps, start to finish</h2>
+    <p class="lead reveal" style="--d:.05s">Every assignment runs on similar disciplined sequence. For a relocation, starting early is crucial.</p>
+    <div class="steprow">
+      <div class="step reveal" style="--d:.04s"><div class="sn">01</div><h4>Programming</h4><p>Identify the full set of space needs and develop a target square-footage calculation.</p></div>
+      <div class="step reveal" style="--d:.1s"><div class="sn">02</div><h4>Site Selection</h4><p>Define criteria, run a comprehensive search, and shortlist qualified buildings.</p></div>
+      <div class="step reveal" style="--d:.16s"><div class="sn">03</div><h4>Negotiation</h4><p>Detailed term sheets translated into careful financial analysis across options.</p></div>
+      <div class="step reveal" style="--d:.22s"><div class="sn">04</div><h4>Lease Negotiation</h4><p>Work alongside counsel on every turn of the documents to ensure favorable lease language.</p></div>
+      <div class="step reveal" style="--d:.28s"><div class="sn">05</div><h4>Vendor Coordination</h4><p>Serve as liaison among architect, engineer, GC, and furniture vendors. Ensures healthy expectations related to project budgeting &amp; timing.</p></div>
+      <div class="step reveal" style="--d:.34s"><div class="sn">06</div><h4>Follow-Up</h4><p>Punch-list items, security deposit return, bid leveling, and ongoing support.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: STATUS QUO ASSESSMENT  [relocation-spine] -->
+<section class="slide light" data-module="statusQuo" data-title="Status Quo" data-group="The Assessment" id="m-statusquo">
+  <div class="inner">
+    <div class="kicker">The Assessment &middot; Where LF Distribution stands today</div>
+    <div class="grid2">
+      <div>
+        <h2 class="title reveal">Starting from a position of time &mdash; and leverage</h2>
+        <p class="lead reveal" style="--d:.05s">With the lease expiring in mid-to-late 2028, LF Distribution has the opportunity to run a real market process. Time is the single biggest source of negotiating leverage.</p>
+        <div class="callout reveal" style="--d:.1s">
+          <div class="ct">The window</div>
+          <p>Beginning the process early allows an appropriate amount of time for site selection and negotiation and a comfortable build-out period.</p>
+        </div>
+      </div>
+      <div>
+        <table class="tbl reveal" style="--d:.08s">
+          <thead><tr><th>Status Quo Factor</th><th>Today</th></tr></thead>
+          <tbody>
+            <tr><td>Current premises</td><td>Empire State Building</td></tr>
+            <tr><td>Current occupancy</td><td>100,000 SF</td></tr>
+            <tr><td>Lease expiration</td><td class="b">Mid &ndash; Late 2028</td></tr>
+            <tr><td>Term remaining</td><td>~2.5 &ndash; 3 years</td></tr>
+            <tr><td>Fully escalated rent</td><td>~High $60's (TBC)</td></tr>
+            <tr><td>Renewal option</td><td>Not Applicable (TBC)</td></tr>
+          </tbody>
+        </table>
+        <p class="map-foot reveal" style="--d:.12s">Bracketed items confirmed with LF Distribution before the meeting; structure shown is final.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: GOING-FORWARD PLAN  [relocation-spine] -->
+<section class="slide paper" data-module="goingForward" data-title="Going Forward" data-group="The Assessment" id="m-goingforward">
+  <div class="inner">
+    <div class="kicker">The Assessment &middot; The going-forward plan</div>
+    <h2 class="title reveal">Defining what "the right space" actually means</h2>
+    <p class="lead reveal" style="--d:.05s">Before a single building is toured, we align on the relocation parameters. These become the scorecard every option is measured against.</p>
+    <div class="grid4">
+      <div class="card reveal" style="--d:.04s"><div class="ico">&#9678;</div><h4>Location</h4><p>NYC Fashion District &mdash; the Broadway / Seventh Avenue corridor and its eastern edges toward Fifth and Madison.</p></div>
+      <div class="card reveal" style="--d:.1s"><div class="ico">$</div><h4>Budget Target</h4><p>For Discussion</p></div>
+      <div class="card reveal" style="--d:.16s"><div class="ico">&#8599;</div><h4>Size Target</h4><p>50,000&ndash;75,000 SF requirement sized to absorb current &amp; growth over the lease term.</p></div>
+      <div class="card reveal" style="--d:.22s"><div class="ico">&#9636;</div><h4>Floor Size</h4><p>Large, efficient floor plates &mdash; full-floor or two-full-floor occupancy preferred.</p></div>
+      <div class="card reveal" style="--d:.28s"><div class="ico">&#9874;</div><h4>Build-out</h4><p>Condition of delivery, ceiling heights, and infrastructure that suit LF's operations.</p></div>
+      <div class="card reveal" style="--d:.34s"><div class="ico">&#9788;</div><h4>Windows &amp; Light</h4><p>Natural light and exposures &mdash; a real driver of staff experience and retention.</p></div>
+      <div class="card reveal" style="--d:.4s"><div class="ico">&#9733;</div><h4>Aesthetic</h4><p>Lobby, building presentation, and image consistent with the LF Distribution brand. Amenity offering.</p></div>
+      <div class="card reveal" style="--d:.46s"><div class="ico">&#8986;</div><h4>Schedule</h4><p>A project timeline that comfortably precedes the 2028 expiry with no holdover risk.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: SITE SELECTION CRITERIA  [relocation-spine] -->
+<section class="slide deep" data-module="siteSelection" data-title="Site Selection" data-group="The Market" id="m-siteselection">
+  <div class="inner">
+    <div class="kicker">The Market &middot; Site selection process</div>
+    <div class="grid2">
+      <div>
+        <h2 class="title reveal" style="color:var(--deeptext)">Start with the best quality buildings that meet the criteria, and operate from there.</h2>
+        <p class="lead reveal" style="--d:.05s">Site selection is less a funnel and more a pyramid. We want to recommend the best buildings first, but also run a comprehensive process to gauge any possible fits.</p>
+        <div class="timeline reveal" style="--d:.1s">
+          <div class="tl-item"><div class="when">Step 1</div><h4>Define parameters &amp; criteria</h4><p>Budget, geography, and qualitative issues translated into a scoring framework.</p></div>
+          <div class="tl-item"><div class="when">Step 2</div><h4>Run a comprehensive search</h4><p>Canvass the full submarket &mdash; direct space, subleases, and quiet availabilities not yet on the market.</p></div>
+          <div class="tl-item"><div class="when">Step 3</div><h4>Present qualified sites &amp; shortlist</h4><p>A curated set of buildings that genuinely meet the 50,000&ndash;75,000 SF requirement.</p></div>
+          <div class="tl-item"><div class="when">Step 4</div><h4>Evaluate the full set of issues</h4><p>Tour, test-fit, and compare &mdash; economics, build-out, and fit, side by side.</p></div>
+        </div>
+      </div>
+      <div>
+        <div class="card reveal" style="--d:.12s;background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);">
+          <h4 style="color:var(--deeptext)">The screen for LF Distribution</h4>
+          <p style="color:#c9ccd4;margin-bottom:18px;">Because the requirement is 50,000&ndash;75,000 SF, the search is driven first by one hard filter:</p>
+          <div class="statbig">50,000+ SF</div>
+          <div class="statlbl" style="color:#c9ccd4;">contiguous, deliverable space &mdash; the test that removes most of the market before qualitative criteria even apply.</div>
+        </div>
+        <div class="callout reveal" style="--d:.18s;margin-top:18px;">
+          <div class="ct">The district from a distance</div>
+          <p>The Fashion District availability map shows exactly which buildings clear that bar &mdash; and which fall short.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: TARGET GEOGRAPHY MAP  [reusable map module]
+     Refined flat 2D with callout cards + leader lines. Data-driven: edit
+     MAP_DATA (streets, avenues, transit, buildings) to repoint at a different
+     submarket. Card side (left/right) is auto-assigned from each building's x. -->
+<section class="slide light" data-module="map" data-title="Availability Map" data-group="The Market" id="m-map">
+  <div class="inner">
+    <div class="kicker">The Market &middot; Fashion District building availabilities</div>
+    <h2 class="title reveal">The buildings in play for LF Distribution</h2>
+    <p class="lead reveal" style="--d:.05s">The Fashion District submarket &mdash; buildings with space available for LF Distribution alongside those we surveyed and ruled out. Click any callout card or building for the full detail.</p>
+    <div class="mapwrap">
+      <svg class="leader-svg" id="leaderSvg"></svg>
+      <div class="cardcol left" id="cardsLeft"></div>
+      <div class="mapface" id="mapFace">
+        <svg class="grid-svg" id="gridSvg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="map-right-rail">
+        <div class="cardcol right" id="cardsRight"></div>
+        <div class="detail" id="mapDetail">
+          <p class="dempty">Select a callout card or a building on the map to see floor plate, availability, asking rent, and notes.</p>
+        </div>
+      </div>
+    </div>
+    <div class="mapbottom">
+      <div class="map-controls">
+        <div class="legendrow">
+          <div class="li"><span class="sw" style="background:var(--good)"></span> Available now</div>
+          <div class="li"><span class="sw" style="background:#7d8590"></span> Considered (no space available)</div>
+        </div>
+        <button class="filterbtn" id="fitFilter"><span>Show only buildings available now</span><span class="state" id="fitState">Off</span></button>
+      </div>
+      <p class="map-foot">Schematic &mdash; building positions are approximate. The in-play set reflects the current working read; floor-plate, availability, and pricing detail to be confirmed on the next data refresh.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: BUILDING SHORTLIST  [relocation-spine] -->
+<section class="slide paper" data-module="shortlist" data-title="Shortlist" data-group="The Market" id="m-shortlist">
+  <div class="inner">
+    <div class="kicker">The Market &middot; Building shortlist</div>
+    <h2 class="title reveal">The buildings that genuinely clear the bar</h2>
+    <p class="lead reveal" style="--d:.05s">Every building we surveyed for LF Distribution, in table form &mdash; buildings with available space first, followed by those considered and ruled out with the reason for each.</p>
+    <table class="tbl reveal" style="--d:.1s">
+      <thead><tr><th>Building</th><th>Largest Floor Plate</th><th>Path to 50&ndash;75K SF</th><th>Indicative Rent</th><th>Status</th></tr></thead>
+      <tbody id="shortlistBody"></tbody>
+    </table>
+    <p class="map-foot reveal" style="--d:.15s">Generated from the same data set as the availability map.</p>
+  </div>
+</section>
+
+<!-- MODULE: SPACE PROGRAMMING  [relocation-spine] -->
+<section class="slide light" data-module="programming" data-title="Programming" data-group="The Market" id="m-programming">
+  <div class="inner">
+    <div class="kicker">The Market &middot; Space programming</div>
+    <h2 class="title reveal">Getting the square footage right, methodically</h2>
+    <p class="lead reveal" style="--d:.05s">"How much space?" is the question that quietly drives the entire budget. We answer it two ways and reconcile them, so find the right balance between current and future needs.</p>
+    <div class="grid2">
+      <div class="card reveal" style="--d:.08s">
+        <span class="tag">Approach A</span>
+        <h4>Top-down</h4>
+        <ul class="ticks" style="margin-top:14px;">
+          <li>Evaluate LF Distribution's existing space and utilization rate.</li>
+          <li>Layout comparisons with furniture plans &mdash; headcount and office-to-workstation ratios.</li>
+          <li>Test full-floor vs. partial-floor efficiency.</li>
+        </ul>
+      </div>
+      <div class="card reveal" style="--d:.16s">
+        <span class="tag">Approach B</span>
+        <h4>Bottom-up</h4>
+        <ul class="ticks" style="margin-top:14px;">
+          <li>Compile needs department by department and seat by seat.</li>
+          <li>Office, conference, and workstation sizes tabled to a Usable Square Footage figure.</li>
+          <li>Apply circulation and loss factors to reach a Rentable Square Footage target.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout reveal" style="--d:.22s;margin-top:30px;">
+      <div class="ct">Key takeaway</div>
+      <p>Reconciling both methods is how we'd want to confirm a 50,000&ndash;75,000 SF range is right.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: NEGOTIATION  [universal] -->
+<section class="slide deep" data-module="negotiation" data-title="Negotiation" data-group="Execution" id="m-negotiation">
+  <div class="inner">
+    <div class="kicker">Execution &middot; What to expect</div>
+    <h2 class="title reveal" style="color:var(--deeptext)">Comprehensive negotiation &mdash; term sheet through lease</h2>
+    <p class="lead reveal" style="--d:.05s">Extensive detail in the term sheets and contract documents is where value is won or lost. We take an active role in both phases.</p>
+    <div class="grid2">
+      <div class="card reveal lightcard" style="--d:.08s;">
+        <h4>Term Sheets</h4>
+        <ul class="ticks" style="margin-top:12px;">
+          <li>Price and concessions, modeled across every shortlisted option.</li>
+          <li>Delivery conditions and landlord work.</li>
+          <li>Flexibility &mdash; expansion, renewal &amp; sublease rights, burn-down schedules, square-footage ranges, conversion of unused concessions.</li>
+        </ul>
+      </div>
+      <div class="card reveal lightcard" style="--d:.16s;">
+        <h4>Lease Documents</h4>
+        <ul class="ticks" style="margin-top:12px;">
+          <li>Failure-to-deliver penalties.</li>
+          <li>Non-disturbance provisions.</li>
+          <li>Deferring issuance of the security deposit.</li>
+          <li>No time limit and full assignability of concessions; favorable sublease provisions.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout reveal" style="--d:.22s;margin-top:28px;">
+      <div class="ct">Key takeaway</div>
+      <p>We are the eyes and ears on the ground for counsel, who will likely never visit the space, and we proactively review every turn of the documents with a complete mark-up.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: VENDOR COORDINATION  [universal] -->
+<section class="slide paper" data-module="vendors" data-title="Vendors" data-group="Execution" id="m-vendors">
+  <div class="inner">
+    <div class="kicker">Execution &middot; What to expect</div>
+    <h2 class="title reveal">We coordinate the vendors so there is healthy level of communication</h2>
+    <p class="lead reveal" style="--d:.05s">A relocation succeeds or fails on how well the vendors communicate. No single vendor owns that, so we do.</p>
+    <div class="grid2">
+      <div>
+        <h4 class="reveal" style="--d:.08s;font-size:18px;margin-bottom:14px;">Vendor selection</h4>
+        <p class="reveal" style="--d:.1s;font-size:14px;color:var(--ink-2);margin-bottom:16px;">Price comparison help, introductions at the right time, and collaboration with each vendor through the project.</p>
+        <div>
+          <span class="tag">Architect</span><span class="tag">Real Estate Attorney</span><span class="tag">Engineer</span>
+          <span class="tag">General Contractor</span><span class="tag">Furniture</span><span class="tag">Low Voltage</span>
+          <span class="tag">Expediter</span><span class="tag">ACP-5 Inspector</span><span class="tag">Moving Company</span>
+        </div>
+      </div>
+      <div>
+        <h4 class="reveal" style="--d:.14s;font-size:18px;margin-bottom:14px;">Vendor coordination</h4>
+        <ul class="ticks reveal" style="--d:.16s">
+          <li>Build a reliable, realistic project schedule from inception to completion.</li>
+          <li>Facilitate a smooth transition with the landlord's operations team.</li>
+          <li>Coordinate the ACP-5 inspection and DOB filings through an approved expediter.</li>
+          <li>Support the architect's bid process and level GC bids.</li>
+          <li>Engage furniture vendors early to secure savings.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout reveal" style="--d:.22s;margin-top:28px;">
+      <div class="ct">Key takeaway</div>
+      <p>Our projects rarely need a separate project manager; we tend to fill that role ourselves.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: CASE STUDIES  [universal / credentials] -->
+<section class="slide light" data-module="caseStudies" data-title="What Sets Us Apart" data-group="Execution" id="m-casestudies">
+  <div class="inner">
+    <div class="kicker">Execution &middot; What sets us apart</div>
+    <h2 class="title reveal">Measurable financial savings</h2>
+    <div class="grid3">
+      <div class="card reveal case-card" style="--d:.06s">
+        <span class="tag">Confidential Tenant</span>
+        <div class="case-deal">1407 Broadway, 62,000 Square Feet</div>
+        <div class="case-metric"><span class="case-num">53</span><span class="case-unit">months</span></div>
+        <div class="case-label">of free rent secured</div>
+        <span class="case-cue">Read the full story &rarr;</span>
+        <div class="case-narrative" hidden>
+          <span class="tag">Confidential Tenant</span>
+          <h3>1407 Broadway, 62,000 Square Feet</h3>
+          <div class="case-hero"><span class="case-num">53</span><span class="case-unit">months</span><span class="case-hero-label">of free rent secured</span></div>
+          <div class="case-photos">
+            <figure class="case-photo"><div class="photo-slot">1407 Broadway &mdash; exterior</div></figure>
+            <figure class="case-photo"><div class="photo-slot">1407 Broadway &mdash; lobby</div></figure>
+          </div>
+          <p>When Confidential Tenant approached us about relocating their office, they were still uncertain about their intention to move vs. renovate their existing space.</p>
+          <p>Their business was almost entirely remote, and yet, they still had a need to showcase their brands to their retail partners, and their 7-year old space had been showing its age.</p>
+          <p>We went about a thorough vetting of the marketplace, ultimately identifying an exciting relocation option in an upgraded quality building. We created a competition between their existing building and their preferred relocation option to negotiate the most favorable deal terms.</p>
+          <p>After a monthslong negotiation process, we learned from the competing building that they were unable to fund the agreed-upon Tenant Improvement Allowance (equaling more than $3.6 million). Coupled with a troubled capital stack, that would have ordinarily derailed a lease negotiation.</p>
+          <p>Despite that, we collaborated with the Ownership's team to develop a Tenant-financed TI package that would convert the value of the TI into free rent by assigning an interest rate to the cost of capital.</p>
+          <p>The tenant ended up building a showcase space that fueled growth in their business and a refreshed cultural environment that eventually brought their talent back to the office. We subsequently helped the Tenant expand in a doubling of their office within a 1-year period, at similar economic terms.</p>
+        </div>
+      </div>
+      <div class="card reveal case-card" style="--d:.13s">
+        <span class="tag">Confidential Tenant</span>
+        <div class="case-deal">1411 Broadway, 99,000 Square Feet</div>
+        <div class="case-metric"><span class="case-num">$172</span><span class="case-unit">PSF</span></div>
+        <div class="case-label">TI Allowance achieved</div>
+        <span class="case-cue">Read the full story &rarr;</span>
+        <div class="case-narrative" hidden>
+          <span class="tag">Confidential Tenant</span>
+          <h3>1411 Broadway, 99,000 Square Feet</h3>
+          <div class="case-hero"><span class="case-num">$172</span><span class="case-unit">PSF</span><span class="case-hero-label">TI Allowance achieved</span></div>
+          <p>When the Confidential Tenant had recently opened brand new offices in London and Shanghai, their New York headquarter offices were beginning to feel tight and worn-out. We had previously supported this client's explosive growth through 15 separate lease acquisitions or dispositions, and they were looking to expand again. The task was to enable that growth within the same elevator bank while, at the same time, securing a Landlord-funded TI package that would enable them to renovate their existing footprint.</p>
+          <p>The Landlord had experienced much higher rents than the market was then commanding, leading to a reset of rent expectations between the parties.</p>
+          <p>As part of a lengthy negotiation process, whereby we exchanged a new lease extension on all existing space as a tradeoff for a slew of benefits to our client, we secured a TI allowance equivalent to over $170 PSF to help fund the Tenant's construction. Further, we were able to negotiate a free rent period over 20+ months long, without having to sign an overly long lease commitment.</p>
+          <p>Lastly, as the Tenant's profile had grown quite significantly since their first lease at the building, we negotiated favorable qualitative terms through exclusive lobby branding signage and the ability to use the Landlord's roofdeck outdoor space at no additional charge.</p>
+        </div>
+      </div>
+      <div class="card reveal case-card" style="--d:.2s">
+        <span class="tag">Confidential Tenant</span>
+        <div class="case-deal">1411 Broadway, 131,000 Square Feet</div>
+        <div class="case-metric"><span class="case-num">$37</span><span class="case-unit">PSF</span></div>
+        <div class="case-label">Net Effective Rent</div>
+        <span class="case-cue">Read the full story &rarr;</span>
+        <div class="case-narrative" hidden>
+          <span class="tag">Confidential Tenant</span>
+          <h3>1411 Broadway, 131,000 Square Feet</h3>
+          <div class="case-hero"><span class="case-num">$37</span><span class="case-unit">PSF</span><span class="case-hero-label">Net Effective Rent</span></div>
+          <p>[ Success story narrative &mdash; to provide. Context for the $37 PSF NER — the deal, the market at the time, and what made this an outlier outcome for the client. ]</p>
+        </div>
+      </div>
+    </div>
+    <div class="callout reveal" style="--d:.26s;margin-top:30px;">
+      <div class="ct">The standard</div>
+      <p>We have demonstrated a consistent ability to secure deal terms that are highly favorable relative to the market norm. We take great pride in working in tandem with our clients on exceptional outcomes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: PROJECT SCHEDULE  [relocation-spine] -->
+<section class="slide paper" data-module="schedule" data-title="Schedule" data-group="Execution" id="m-schedule">
+  <div class="inner">
+    <div class="kicker">Execution &middot; Project schedule</div>
+    <h2 class="title reveal">Working backward from the 2028 expiry</h2>
+    <p class="lead reveal" style="--d:.05s">An indicative timeline. Starting now leaves comfortable margin &mdash; and keeps LF Distribution negotiating from strength, never from a deadline.</p>
+    <div class="timeline reveal" style="--d:.1s">
+      <div class="tl-item"><div class="when">Now &ndash; Q3 2026</div><h4>Programming &amp; criteria</h4><p>Confirm the space program, budget, and parameters; finalize the search criteria.</p></div>
+      <div class="tl-item"><div class="when">Q3 2026 &ndash; Q1 2027</div><h4>Market search &amp; tours</h4><p>Canvass the submarket, tour the shortlist, and run test-fits on the leading options.</p></div>
+      <div class="tl-item"><div class="when">Q1 &ndash; Q3 2027</div><h4>Negotiation &amp; lease</h4><p>Term sheets across finalists, financial analysis, and lease negotiation alongside counsel.</p></div>
+      <div class="tl-item"><div class="when">Q3 2027 &ndash; Q2 2028</div><h4>Design &amp; build-out</h4><p>Construction documents, permitting, GC bidding, build-out, and furniture.</p></div>
+      <div class="tl-item"><div class="when">Mid 2028</div><h4>Move-in &mdash; ahead of expiry</h4><p>Relocate with margin to spare; no holdover, no deadline pricing.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: FOLLOW-UP SERVICES  [universal] -->
+<section class="slide light" data-module="followUp" data-title="Follow-Up" data-group="Execution" id="m-followup">
+  <div class="inner">
+    <div class="kicker">Execution &middot; After move-in</div>
+    <h2 class="title reveal">The relationship doesn't end at move-in</h2>
+    <p class="lead reveal" style="--d:.05s">We stay available to close out the long tail of a relocation &mdash; the items that surface in the months after the boxes are unpacked.</p>
+    <div class="grid3">
+      <div class="card reveal" style="--d:.05s"><h4>Close-out</h4><p>Move company coordination, renovation approvals, and return of the security deposit on the prior space.</p></div>
+      <div class="card reveal" style="--d:.12s"><h4>Construction</h4><p>Leveling of construction bids and referrals to trusted vendors as punch-list items arise.</p></div>
+      <div class="card reveal" style="--d:.19s"><h4>Prior space</h4><p>Assistance subleasing out any residual space LF Distribution leaves behind.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE: NEXT STEPS  [relocation-spine] -->
+<section class="slide dark" data-module="nextSteps" data-title="Next Steps" data-group="" id="m-nextsteps">
+  <div class="inner">
+    <div class="kicker">Next steps</div>
+    <h2 class="title reveal" style="color:var(--deeptext)">What we'd do first</h2>
+    <p class="lead reveal" style="--d:.05s">Three concrete steps to turn this roadmap into a live process for LF Distribution.</p>
+    <div class="grid3">
+      <div class="card reveal" style="--d:.06s;background:var(--deepbg-2);border-color:var(--deepline);">
+        <div class="ico">1</div>
+        <h4 style="color:var(--deeptext)">Confirm the program</h4>
+        <p style="color:#c9ccd4;">A working session to lock the space program, budget, and search criteria.</p>
+      </div>
+      <div class="card reveal" style="--d:.14s;background:var(--deepbg-2);border-color:var(--deepline);">
+        <div class="ico">2</div>
+        <h4 style="color:var(--deeptext)">Validate the market</h4>
+        <p style="color:#c9ccd4;">Refresh the availability map with live data and quiet listings, then prioritize tours.</p>
+      </div>
+      <div class="card reveal" style="--d:.22s;background:var(--deepbg-2);border-color:var(--deepline);">
+        <div class="ico">3</div>
+        <h4 style="color:var(--deeptext)">Begin the search</h4>
+        <p style="color:#c9ccd4;">Engage, canvass the submarket, and bring back a toured, test-fit shortlist.</p>
+      </div>
+    </div>
+    <p class="lead reveal" style="--d:.3s;margin-top:40px;color:#aeb2bc;">Prepared by <span data-brand="firm">Benchmark Properties</span></p>
+  </div>
+</section>
+
+</div><!-- /#deck -->
+
+<script>
+/* ===========================================================================
+   1 - BRAND : firm identity + active theme
+   theme: "ivory" | "editorial" | "gallery" | "charcoal"
+   (or press "T" while viewing the deck to cycle through them live)
+   =========================================================================== */
+var BRAND = {
+  firm:    "Benchmark Properties",
+  tagline: "Tenant Representation · NYC",
+  theme:   "ivory"
+};
+
+/* ===========================================================================
+   2 - THEMES : four built-in branding presets, all on Benchmark's
+   charcoal + marigold identity. Each sets the themeable CSS tokens + heading
+   font. Add or edit a preset here and it becomes available immediately.
+   =========================================================================== */
+var THEMES = {
+  ivory: {
+    label:"Ivory Bright",
+    vars:{
+      "--bone":"#fdf9f0","--paper":"#ffffff","--ink":"#231f20","--ink-2":"#54504a",
+      "--line":"#e6e0d2","--muted":"#9b958b","--accent":"#fcaf17","--accent-deep":"#9a6b08",
+      "--deepbg":"#231f20","--deepbg-2":"#322d2a","--deeptext":"#f6f1e7","--deepline":"rgba(255,255,255,.12)",
+      "--ff-head":"'Georgia','Times New Roman',serif"
+    }
+  },
+  editorial: {
+    label:"Editorial Warm",
+    vars:{
+      "--bone":"#f4f1ea","--paper":"#fffdf8","--ink":"#262220","--ink-2":"#5c564f",
+      "--line":"#ddd6c8","--muted":"#948d82","--accent":"#d99526","--accent-deep":"#8f5f10",
+      "--deepbg":"#26221f","--deepbg-2":"#36302b","--deeptext":"#f2ede3","--deepline":"rgba(255,255,255,.11)",
+      "--ff-head":"'Georgia','Times New Roman',serif"
+    }
+  },
+  gallery: {
+    label:"Gallery",
+    vars:{
+      "--bone":"#f1f2f4","--paper":"#ffffff","--ink":"#1a1c1f","--ink-2":"#50545b",
+      "--line":"#e0e2e5","--muted":"#8b9099","--accent":"#fcaf17","--accent-deep":"#7e6112",
+      "--deepbg":"#1a1c1f","--deepbg-2":"#2a2d31","--deeptext":"#eef0f2","--deepline":"rgba(255,255,255,.12)",
+      "--ff-head":"'Helvetica Neue',Arial,sans-serif"
+    }
+  },
+  charcoal: {
+    label:"Charcoal Premium",
+    vars:{
+      "--bone":"#211f1d","--paper":"#2b2825","--ink":"#f3efe7","--ink-2":"#b3ada1",
+      "--line":"#3c3833","--muted":"#8d877c","--accent":"#fcaf17","--accent-deep":"#fcaf17",
+      "--deepbg":"#161412","--deepbg-2":"#252220","--deeptext":"#f3efe7","--deepline":"rgba(255,255,255,.10)",
+      "--ff-head":"'Georgia','Times New Roman',serif"
+    }
+  }
+};
+
+/* ===========================================================================
+   3 - LOGO : Benchmark Properties wordmark, embedded so the deck stays a
+   single self-contained file. White renders on the dark chrome/cover;
+   black is kept for any future light-chrome theme.
+   =========================================================================== */
+var LOGO = {
+  white: "data:image/png;base64,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",
+  black: "data:image/png;base64,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"
+};
+
+/* ===========================================================================
+   4 - MODULE_CONFIG : include / exclude any module for this pitch.
+   [universal] modules work for a renewal OR a relocation pitch.
+   [relocation-spine] modules are specific to this pitch type.
+   =========================================================================== */
+var MODULE_CONFIG = {
+  cover:         true,   // universal
+  toc:           true,   // universal
+  approach:      true,   // universal / credentials
+  team:          true,   // universal / credentials (bios)
+  experience:    true,   // universal / credentials
+  clients:       true,   // universal / credentials
+  process:       true,   // universal
+  statusQuo:     true,   // relocation-spine
+  goingForward:  true,   // relocation-spine
+  siteSelection: true,   // relocation-spine
+  map:           true,   // map module (reusable)
+  shortlist:     true,   // relocation-spine
+  programming:   true,   // relocation-spine
+  negotiation:   true,   // universal
+  vendors:       true,   // universal
+  caseStudies:   true,   // universal / credentials
+  schedule:      true,   // relocation-spine
+  followUp:      true,   // universal
+  nextSteps:     true    // relocation-spine
+};
+
+/* ===========================================================================
+   5 - MAP_DATA : the reusable Target Geography map (17 confirmed in-play
+   buildings). fit "yes" = available now, "soon" = coming available.
+   Card side (left/right) auto-assigned from each building's x.
+   =========================================================================== */
+var MAP_DATA = {
+  requirement: "50,000 - 75,000 SF",
+  streets: [
+    {label:"W 41st St", y:11},
+    {label:"W 39th St", y:28},
+    {label:"W 37th St", y:45},
+    {label:"W 35th St", y:62},
+    {label:"W 33rd St", y:90}
+  ],
+  avenues: [
+    {label:"Ninth Ave", x:4},
+    {label:"Eighth Ave", x:11},
+    {label:"Seventh Ave", x:18},
+    {label:"Sixth Ave", x:42},
+    {label:"Fifth Ave", x:62},
+    {label:"Madison Ave", x:76},
+    {label:"Park Ave", x:90}
+  ],
+  transit: [
+    {label:"Penn Station", x:12, y:77, color:"#c0392b", icon:"1"},
+    {label:"34 St - Herald Sq", x:39, y:67, color:"#e3922b", icon:"N"},
+    {label:"Bryant Park", x:52, y:14, color:"#1f5e57", icon:"7"},
+    {label:"Grand Central", x:88, y:9, color:"#1f5e57", icon:"S"}
+  ],
+  buildings: [
+    {id:"1333b", name:"1333 Broadway", addr:"1333 Broadway", x:25, y:33, fp:"30,220 SF", fit:"yes", cardline:"~60,000 SF on fl 11-12", avail:"~60,000 SF - 11th and 12th floors", block:"~60,000 SF (fl 11-12)", rent:"Mid $60s PSF", note:"Empire State Realty Trust. The Johnson Building. Brand new roof deck amenity completed."},
+    {id:"1407b", name:"1407 Broadway", addr:"1407 Broadway", x:23, y:33, fp:"40,000 SF", fit:"yes", cardline:"~100,000 SF on fl 2-3-4", avail:"~100,000 SF - 2nd, 3rd, and 4th floors", block:"~100,000 SF (2nd, 3rd, 4th)", rent:"Mid $40s PSF", note:"Large unique floor plates with great window lines."},
+    {id:"1411b", name:"1411 Broadway", addr:"1411 Broadway", x:25, y:25, fp:"30,603 SF", fit:"yes", cardline:"30th floor: 25,000 SF", avail:"25,000 SF (30th floor, free and clear)", block:"30th floor: 25,000 SF", rent:"Low $80's PSF", note:"La Caisse ownership. 92.68% leased. Renovated 2016. Class A."},
+    {id:"1400b", name:"1400 Broadway", addr:"1400 Broadway", x:34, y:37, fp:"36,000 SF", fit:"yes", cardline:"~72,000 SF max contiguous", avail:"8th and 9th floors sublease from Fragoman", block:"~72,000 SF (max contiguous)", rent:"Mid $40s PSF", note:"Empire State Realty Trust. Newmark leasing (Erik Harris). 96.88% leased. Class A. Plug & Play, wheelchair accessible, Energy Star."},
+    {id:"500s", name:"500 Seventh Ave", addr:"500 Seventh Avenue", x:16, y:46, fp:"46,000 SF", fit:"yes", cardline:"~92,000 SF max contiguous", avail:"To be confirmed", block:"~92,000 SF (max contiguous)", rent:"To be confirmed", note:"The Moinian Group. 85.09% leased. Large block of base floors turning over. Renovated 2000."},
+    {id:"498s", name:"498 Seventh Ave", addr:"498 Seventh Avenue", x:15, y:52, fp:"32,152 SF", fit:"yes", cardline:"~30,000 SF full floors", avail:"To be confirmed", block:"Potential contiguous 30,000 SF floors", rent:"To be confirmed", note:"George Comfort & Sons. 96.01% leased. Class A. Renovated 2010."},
+    {id:"501s", name:"501 Seventh Ave", addr:"501 Seventh Avenue", x:20, y:42, fp:"30,000 SF", fit:"yes", cardline:"~59,000 SF max contiguous", avail:"75,545 SF direct available", block:"~59,000 SF (max contiguous)", rent:"Mid $50's PSF", note:"Empire State Realty Trust."},
+    {id:"111w33", name:"111 West 33rd St", addr:"111 West 33rd Street", x:33, y:78, fp:"28,166 SF", fit:"yes", cardline:"~26,000 SF direct full floor", avail:"To be confirmed", block:"~26,000 SF direct full floor", rent:"To be confirmed", note:"Empire State Realty Trust. 99.09% leased. Class A. Renovated 2018. Roof terrace, Energy Star."},
+    {id:"260m", name:"260 Madison Ave", addr:"260 Madison Avenue", x:76, y:36, fp:"36,000 SF", fit:"yes", cardline:"~72,000 SF max contiguous", avail:"To be confirmed", block:"~72,000 SF (max contiguous)", rent:"Mid $70s PSF", note:"AmTrust Realty Corp. 83.55% leased. Class B. Renovated 2015. New lobby, facade, amenity center."},
+    {id:"417f", name:"417 Fifth Ave", addr:"417 Fifth Avenue", x:67, y:42, fp:"28,122 SF", fit:"yes", cardline:"Floor plate match - monitoring", avail:"100% leased - monitoring for availability", block:"To be confirmed", rent:"To be confirmed", note:"IC Real Estate Holdings. 100% leased. Class B. Renovated 2003. High ceilings, natural light, concierge, Energy Star."},
+    {id:"350f", name:"350 Fifth Ave", addr:"350 Fifth Avenue (Empire State Building)", x:56, y:77, fp:"-", fit:"soon", cardline:"Current HQ", avail:"-", block:"Current HQ", rent:"-", note:"LF Distribution's current headquarters."},
+    {id:"3park", name:"3 Park Ave", addr:"3 Park Avenue", x:90, y:77, fp:"23,000 SF", fit:"soon", cardline:"Three contiguous floors", avail:"Entire 14, 15, 16, 38, 39, 40 - 22,716 SF each", block:"~69,000 SF (three floors)", rent:"-", note:"Three contiguous floors available, with windows on four sides."},
+    {id:"1440b", name:"1440 Broadway", addr:"1440 Broadway", x:28, y:18, fp:"-", fit:"soon", cardline:"WeWork HQ - 60-75K SF not available", avail:"-", block:"WeWork HQ", rent:"-", note:"WeWork headquarters; 60-75K SF not available."},
+    {id:"200m", name:"200 Madison Ave", addr:"200 Madison Avenue", x:76, y:58, fp:"-", fit:"soon", cardline:"-", avail:"-", block:"-", rent:"-", note:"-"},
+    {id:"s1251", name:"10 West 33rd St", addr:"10 West 33rd Street", x:52, y:87, fp:"-", fit:"soon", cardline:"100% occupied", avail:"-", block:"100% occupied", rent:"-", note:"-"},
+    {id:"s2132", name:"11 Penn Plaza", addr:"11 Penn Plaza", x:14, y:94, fp:"-", fit:"soon", cardline:"AMC Networks / Apple HQ", avail:"-", block:"AMC Networks / Apple HQ", rent:"-", note:"60-75K SF not available."},
+    {id:"s4403", name:"950 6th Ave / 2 Herald Sq", addr:"950 6th Ave / 2 Herald Square", x:44, y:64, fp:"-", fit:"soon", cardline:"Mercy College", avail:"-", block:"Mercy College", rent:"-", note:"60-75K SF not available."},
+    {id:"s6091", name:"7 West 34th St", addr:"7 West 34th Street", x:60, y:74, fp:"-", fit:"soon", cardline:"Amazon HQ", avail:"-", block:"Amazon HQ", rent:"-", note:"-"},
+    {id:"s7850", name:"424 5th Ave", addr:"424 5th Avenue", x:62, y:38, fp:"-", fit:"soon", cardline:"Amazon HQ", avail:"-", block:"Amazon HQ", rent:"-", note:"-"},
+    {id:"s0832", name:"1 Herald Square", addr:"1 Herald Square", x:38, y:67, fp:"-", fit:"soon", cardline:"YU HQ", avail:"-", block:"YU HQ", rent:"-", note:"-"},
+    {id:"s2830", name:"2 Park Ave", addr:"2 Park Avenue", x:90, y:93, fp:"-", fit:"soon", cardline:"60-75K SF not available", avail:"-", block:"60-75K SF not available", rent:"-", note:"-"},
+    {id:"s4774", name:"100 West 33rd St", addr:"100 West 33rd Street", x:30, y:87, fp:"-", fit:"soon", cardline:"60-75K SF not available", avail:"-", block:"60-75K SF not available", rent:"-", note:"-"},
+    {id:"s4488", name:"1372 Broadway", addr:"1372 Broadway", x:32, y:46, fp:"-", fit:"soon", cardline:"Ross HQ", avail:"-", block:"Ross HQ", rent:"-", note:"-"},
+    {id:"y1446", name:"200 Madison Ave (second listing)", addr:"200 Madison Avenue", x:null, y:null, fp:"-", fit:"soon", cardline:"-", avail:"-", block:"-", rent:"-", note:"-"}
+  ]
+};
+/* ===========================================================================
+   6 - BUILD : apply theme + brand + logo, prune modules, build nav, wire
+   scroll, render the map, build the shortlist.
+   =========================================================================== */
+(function(){
+  var drawLeaders = null;   // assigned by the map module below
+
+  /* --- theme system --- */
+  var THEME_ORDER = ["ivory","editorial","gallery","charcoal"];
+  function applyTheme(key){
+    var t = THEMES[key] || THEMES.ivory;
+    var r = document.documentElement;
+    for(var k in t.vars){ r.style.setProperty(k, t.vars[k]); }
+    var src = LOGO.white;  // white reads on the dark chrome + cover in all presets
+    var lt=document.getElementById("logoTopbar"); if(lt) lt.src=src;
+    var lc=document.getElementById("logoCover");  if(lc) lc.src=src;
+  }
+  function showToast(label){
+    var el=document.getElementById("themeToast"); if(!el) return;
+    el.innerHTML="Theme &middot; <b>"+label+"</b>";
+    el.classList.add("show");
+    clearTimeout(el._t);
+    el._t=setTimeout(function(){el.classList.remove("show");},1800);
+  }
+  function cycleTheme(){
+    var i=THEME_ORDER.indexOf(BRAND.theme);
+    BRAND.theme=THEME_ORDER[(i+1)%THEME_ORDER.length];
+    applyTheme(BRAND.theme);
+    showToast((THEMES[BRAND.theme]||{}).label||BRAND.theme);
+    if(drawLeaders) setTimeout(drawLeaders,80);
+  }
+  applyTheme(BRAND.theme);
+
+  /* cover background cycle (press "B") */
+  var COVER_BGS=["cover-bg-ivory","cover-bg-charcoal","cover-bg-marigold","cover-bg-paper"];
+  var COVER_LABELS={"cover-bg-ivory":"Ivory","cover-bg-charcoal":"Charcoal","cover-bg-marigold":"Marigold","cover-bg-paper":"Paper"};
+  function cycleCoverBg(){
+    var cv=document.getElementById("m-cover"); if(!cv) return;
+    var cur=COVER_BGS.filter(function(cl){return cv.classList.contains(cl);})[0]||"cover-bg-ivory";
+    var nxt=COVER_BGS[(COVER_BGS.indexOf(cur)+1)%COVER_BGS.length];
+    COVER_BGS.forEach(function(cl){cv.classList.remove(cl);});
+    cv.classList.add(nxt);
+    showToast("Cover &middot; <b>"+COVER_LABELS[nxt]+"</b>");
+  }
+
+  /* --- brand text --- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-brand="firm"]'),function(e){e.textContent=BRAND.firm;});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-brand="tagline"]'),function(e){e.textContent=BRAND.tagline;});
+
+  /* --- prune disabled modules --- */
+  Array.prototype.forEach.call(document.querySelectorAll('.slide[data-module]'),function(sec){
+    var key=sec.getAttribute("data-module");
+    if(MODULE_CONFIG[key]===false) sec.remove();
+  });
+
+  var slides=Array.prototype.slice.call(document.querySelectorAll('.slide'));
+
+  /* --- slide numbers --- */
+  slides.forEach(function(s,i){
+    if(s.id==="m-cover") return;
+    var n=document.createElement("div");
+    n.className="slide-num";
+    n.textContent=String(i+1).padStart(2,"0")+" / "+String(slides.length).padStart(2,"0");
+    s.appendChild(n);
+  });
+
+  /* --- contents overlay --- */
+  var ovList=document.getElementById("ov-list");
+  slides.forEach(function(s,i){
+    var title=s.getAttribute("data-title")||"";
+    var grp=s.getAttribute("data-group")||"";
+    var li=document.createElement("li");
+    li.innerHTML='<span class="n">'+String(i+1).padStart(2,"0")+'</span><span class="t">'+title+'</span>'+(grp?'<span class="grp">'+grp+'</span>':'');
+    li.addEventListener("click",function(){s.scrollIntoView({behavior:"smooth"});closeOverlay();});
+    ovList.appendChild(li);
+  });
+
+  /* --- side rail --- */
+  var rail=document.getElementById("rail");
+  slides.forEach(function(s,i){
+    var b=document.createElement("button");
+    b.title=s.getAttribute("data-title")||("Slide "+(i+1));
+    b.addEventListener("click",function(){s.scrollIntoView({behavior:"smooth"});});
+    rail.appendChild(b);
+  });
+  var dots=Array.prototype.slice.call(rail.children);
+
+  /* --- overlay open/close --- */
+  var overlay=document.getElementById("overlay");
+  function openOverlay(){overlay.classList.add("open");}
+  function closeOverlay(){overlay.classList.remove("open");}
+  document.getElementById("menubtn").addEventListener("click",openOverlay);
+  document.getElementById("closeov").addEventListener("click",closeOverlay);
+  overlay.addEventListener("click",function(e){if(e.target===overlay)closeOverlay();});
+
+  /* --- scroll: progress + active dot --- */
+  var deck=document.getElementById("deck");
+  var progress=document.getElementById("progress");
+  var currentIdx=0;
+  function onScroll(){
+    var max=deck.scrollHeight-deck.clientHeight;
+    progress.style.width=(max>0?(deck.scrollTop/max*100):0)+"%";
+    var idx=0,best=Infinity;
+    slides.forEach(function(s,i){
+      var d=Math.abs(s.offsetTop-deck.scrollTop);
+      if(d<best){best=d;idx=i;}
+    });
+    dots.forEach(function(d,i){d.classList.toggle("active",i===idx);});
+    currentIdx=idx;
+  }
+  deck.addEventListener("scroll",onScroll,{passive:true});
+
+  /* --- pager + keyboard --- */
+  function go(dir){
+    var i=Math.max(0,Math.min(slides.length-1,currentIdx+dir));
+    slides[i].scrollIntoView({behavior:"smooth"});
+  }
+  document.getElementById("nextb").addEventListener("click",function(){go(1);});
+  document.getElementById("prevb").addEventListener("click",function(){go(-1);});
+  document.addEventListener("keydown",function(e){
+    if(e.key==="ArrowDown"||e.key==="PageDown"){e.preventDefault();go(1);}
+    if(e.key==="ArrowUp"||e.key==="PageUp"){e.preventDefault();go(-1);}
+    if(e.key==="Escape")closeOverlay();
+    if(e.key==="t"||e.key==="T")cycleTheme();
+    if(e.key==="b"||e.key==="B")cycleCoverBg();
+  });
+
+  /* --- reveal on scroll --- */
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target);} });
+  },{root:deck,threshold:.18});
+  Array.prototype.forEach.call(document.querySelectorAll('.reveal'),function(el){io.observe(el);});
+
+  /* --- animated counters --- */
+  var cio=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(!en.isIntersecting)return;
+      var el=en.target, target=parseFloat(el.dataset.count), suffix=el.dataset.suffix||"";
+      var v=0, inc=target/40;
+      var t=setInterval(function(){
+        v+=inc;
+        if(v>=target){v=target;clearInterval(t);}
+        el.textContent=Math.round(v)+suffix;
+      },18);
+      cio.unobserve(el);
+    });
+  },{root:deck,threshold:.5});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-count]'),function(el){cio.observe(el);});
+
+  onScroll();
+
+  /* =========================================================================
+     MAP MODULE : refined flat 2D - street grid, callout cards, leader lines.
+     ========================================================================= */
+  var mapSection=document.querySelector('[data-module="map"]');
+  if(mapSection){
+    var gridSvg=document.getElementById("gridSvg");
+    var leaderSvg=document.getElementById("leaderSvg");
+    var mapFace=document.getElementById("mapFace");
+    var mapwrap=mapSection.querySelector(".mapwrap");
+    var cardsLeft=document.getElementById("cardsLeft");
+    var cardsRight=document.getElementById("cardsRight");
+    var detail=document.getElementById("mapDetail");
+    var NS="http://www.w3.org/2000/svg";
+    function mk(tag,attrs){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);return e;}
+    function glbl(cls,pos,text){var d=document.createElement("div");d.className=cls;for(var k in pos)d.style[k]=pos[k];d.textContent=text;mapFace.appendChild(d);return d;}
+
+    gridSvg.appendChild(mk("rect",{x:0,y:0,width:100,height:100,fill:"#dfe7ee"}));
+    MAP_DATA.streets.forEach(function(st){
+      gridSvg.appendChild(mk("line",{x1:0,y1:st.y,x2:100,y2:st.y,stroke:"#ffffff","stroke-width":2,"vector-effect":"non-scaling-stroke"}));
+      glbl("m-street",{top:st.y+"%"},st.label);
+    });
+    MAP_DATA.avenues.forEach(function(av){
+      gridSvg.appendChild(mk("line",{x1:av.x,y1:0,x2:av.x,y2:100,stroke:"#ffffff","stroke-width":1.5,"vector-effect":"non-scaling-stroke"}));
+      glbl("m-ave",{left:av.x+"%"},av.label);
+    });
+    gridSvg.appendChild(mk("line",{x1:36,y1:0,x2:16,y2:100,stroke:"#c7b27e","stroke-width":4,"vector-effect":"non-scaling-stroke"}));
+    gridSvg.appendChild(mk("line",{x1:36,y1:0,x2:16,y2:100,stroke:"#ffffff","stroke-width":1,"stroke-dasharray":"3 3","vector-effect":"non-scaling-stroke"}));
+    glbl("m-bway",{left:"29%",top:"29%"},"BROADWAY");
+
+    (MAP_DATA.transit||[]).forEach(function(t){
+      var d=document.createElement("div");
+      d.className="m-transit";
+      d.style.left=t.x+"%";d.style.top=t.y+"%";
+      var dot=document.createElement("span");dot.className="tdot";dot.style.background=t.color;dot.textContent=t.icon;
+      var lab=document.createElement("span");lab.className="tlabel";lab.textContent=t.label;
+      d.appendChild(dot);d.appendChild(lab);
+      mapFace.appendChild(d);
+    });
+
+    var statusDeep={yes:"#27583f",soon:"#5a626b"};
+    var statusLabel={yes:"Available now",soon:"Considered"};
+    var statusCls={yes:"now",soon:"soon"};
+    var dotEl={}, cardEl={}, allDots=[], allCards=[];
+
+    MAP_DATA.buildings.forEach(function(b,i){
+      if(b.x==null||b.y==null) return;
+      var dot=document.createElement("div");
+      dot.className="mdot "+statusCls[b.fit];
+      dot.style.left=b.x+"%";dot.style.top=b.y+"%";dot.style.opacity="0";
+      dot.title=b.name;
+      dot.addEventListener("click",function(){selectBuilding(b);});
+      mapFace.appendChild(dot);
+      dotEl[b.id]=dot;allDots.push(dot);
+      (function(el,d){setTimeout(function(){el.style.transition="opacity .45s";el.style.opacity="1";},220+d*40);})(dot,i);
+    });
+
+    function selectBuilding(b){
+      allDots.forEach(function(x){x.classList.remove("sel");});
+      allCards.forEach(function(x){x.classList.remove("sel");});
+      if(dotEl[b.id]) dotEl[b.id].classList.add("sel");
+      if(cardEl[b.id]) cardEl[b.id].classList.add("sel");
+      showDetail(b);
+      drawLeaders(b.id);
+    }
+    function bySide(side){
+      return MAP_DATA.buildings.filter(function(b){
+        if(b.fit!=="yes" || b.x==null) return false;
+        return (b.x<48?"L":"R")===side;
+      }).sort(function(a,b){return a.y-b.y;});
+    }
+    function makeCard(b,col){
+      var card=document.createElement("div");
+      card.className="mcard "+statusCls[b.fit];
+      var nm=document.createElement("div");nm.className="mc-name";nm.textContent=b.name;
+      var ft=document.createElement("div");ft.className="mc-fact";ft.textContent=b.cardline;
+      card.appendChild(nm);card.appendChild(ft);
+      col.appendChild(card);
+      cardEl[b.id]=card;allCards.push(card);
+      card.addEventListener("click",function(){selectBuilding(b);});
+    }
+    bySide("L").forEach(function(b){makeCard(b,cardsLeft);});
+    bySide("R").forEach(function(b){makeCard(b,cardsRight);});
+
+    function showDetail(b){
+      detail.innerHTML=
+        '<div class="dstatus" style="color:'+statusDeep[b.fit]+'">'+statusLabel[b.fit]+'</div>'+
+        '<h4>'+b.name+'</h4>'+
+        '<div class="daddr">'+b.addr+'</div>'+
+        '<div class="drow"><span>Floor plate</span><span>'+b.fp+'</span></div>'+
+        '<div class="drow"><span>Availability</span><span>'+b.avail+'</span></div>'+
+        '<div class="drow"><span>Largest block</span><span>'+b.block+'</span></div>'+
+        '<div class="drow"><span>Indicative rent</span><span>'+b.rent+'</span></div>'+
+        '<div class="dnote">'+b.note+'</div>';
+    }
+
+    drawLeaders=function(highlightId){
+      var wrapR=mapwrap.getBoundingClientRect();
+      if(wrapR.width<10){return;}
+      var inkCol=(getComputedStyle(document.documentElement).getPropertyValue("--ink")||"#222").trim();
+      leaderSvg.innerHTML="";
+      leaderSvg.setAttribute("viewBox","0 0 "+wrapR.width+" "+wrapR.height);
+      MAP_DATA.buildings.forEach(function(b){
+        var card=cardEl[b.id], dot=dotEl[b.id];
+        if(!card||!dot){return;}
+        if(card.classList.contains("dim")){return;}
+        var cr=card.getBoundingClientRect(), dr=dot.getBoundingClientRect();
+        var left=b.x<48;
+        var fromX=(left?cr.right:cr.left)-wrapR.left;
+        var fromY=cr.top-wrapR.top+cr.height/2;
+        var toX=dr.left-wrapR.left+dr.width/2;
+        var toY=dr.top-wrapR.top+dr.height/2;
+        var midX=left?fromX+11:fromX-11;
+        var hl=(highlightId&&highlightId===b.id);
+        var faded=(highlightId&&!hl);
+        var w=hl?1.7:0.85;
+        var op=hl?1:(faded?0.18:0.5);
+        leaderSvg.appendChild(mk("path",{d:"M "+fromX+" "+fromY+" L "+midX+" "+fromY+" L "+toX+" "+toY,
+          fill:"none",stroke:inkCol,"stroke-width":w,"stroke-linecap":"round","stroke-linejoin":"round","stroke-opacity":op}));
+        leaderSvg.appendChild(mk("circle",{cx:fromX,cy:fromY,r:hl?2.4:1.7,fill:inkCol,"fill-opacity":op}));
+      });
+    };
+
+    var fitOnly=false;
+    var fitBtn=document.getElementById("fitFilter");
+    var fitState=document.getElementById("fitState");
+    fitBtn.addEventListener("click",function(){
+      fitOnly=!fitOnly;
+      fitState.textContent=fitOnly?"On":"Off";
+      MAP_DATA.buildings.forEach(function(b){
+        var hide=fitOnly&&b.fit!=="yes";
+        if(dotEl[b.id]) dotEl[b.id].classList.toggle("dim",hide);
+        if(cardEl[b.id]) cardEl[b.id].classList.toggle("dim",hide);
+      });
+      drawLeaders();
+    });
+
+    setTimeout(function(){drawLeaders();},350);
+    setTimeout(function(){drawLeaders();},1200);
+    window.addEventListener("resize",function(){drawLeaders();});
+    window.addEventListener("load",function(){drawLeaders();});
+  }
+
+  /* =========================================================================
+     SHORTLIST MODULE : generated from MAP_DATA (every in-play building)
+     ========================================================================= */
+  var shortlistBody=document.getElementById("shortlistBody");
+  if(shortlistBody){
+    var statusText={yes:"Available now",soon:"Considered"};
+    var rankOrder={yes:0,soon:1};
+    var rows=MAP_DATA.buildings.filter(function(b){return b.fit==="yes"||b.fit==="soon";});
+    rows.sort(function(a,b){return rankOrder[a.fit]-rankOrder[b.fit];});
+    rows.forEach(function(b){
+      var tr=document.createElement("tr");
+      var tagStyle=b.fit==="yes"?"border-color:var(--good);color:var(--good-deep);":"border-color:#7d8590;color:#5a626b;";
+      var pathText = (b.block && b.block !== "-") ? b.block : (b.cardline || "-");
+      tr.innerHTML=
+        '<td class="b">'+b.name+'</td>'+
+        '<td>'+b.fp+'</td>'+
+        '<td>'+pathText+'</td>'+
+        '<td>'+b.rent+'</td>'+
+        '<td><span class="tag" style="margin:0;'+tagStyle+'">'+statusText[b.fit]+'</span></td>';
+      shortlistBody.appendChild(tr);
+    });
+  }
+
+  /* case-study modal: cards open a popout with the full narrative */
+  var caseModal=document.getElementById("caseModal");
+  if(caseModal){
+    var caseContent=document.getElementById("caseModalContent");
+    function openCase(card){
+      var n=card.querySelector(".case-narrative");
+      caseContent.innerHTML=n?n.innerHTML:"";
+      caseModal.hidden=false;
+    }
+    function closeCase(){caseModal.hidden=true;}
+    Array.prototype.forEach.call(document.querySelectorAll(".case-card"),function(c){
+      c.addEventListener("click",function(){openCase(c);});
+    });
+    caseModal.querySelector(".case-modal-close").addEventListener("click",closeCase);
+    caseModal.querySelector(".case-modal-backdrop").addEventListener("click",closeCase);
+    document.addEventListener("keydown",function(e){
+      if(e.key==="Escape" && !caseModal.hidden) closeCase();
+    });
+  }
+
+})();
+</script>
+<div id="caseModal" class="case-modal" hidden>
+  <div class="case-modal-backdrop"></div>
+  <div class="case-modal-body">
+    <button class="case-modal-close" aria-label="Close">&times;</button>
+    <div id="caseModalContent"></div>
+  </div>
+</div>
+</body>
+</html>
